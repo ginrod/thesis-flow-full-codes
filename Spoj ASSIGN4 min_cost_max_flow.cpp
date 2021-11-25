@@ -58,18 +58,18 @@ graph readInput() {
     return adj;
 };
 
-vector<int> bellmanFord(graph &adj) {
-    auto potential = vector<int>((int)adj.size());
+vector<int> bellmanFord(graph &adj, int s) {
+    auto dist = vector<int>((int)adj.size(), +oo);
+    dist[s] = 0;
 
     for (int k = 0; k < (int)adj.size(); ++k)
         for (int u = 0; u < (int)adj[u].size(); ++u)
             for (auto &e: adj[u]) {
-                int reducedCost = potential[e.u] + e.cost - potential[e.v];
-                if (e.cap > 0 && reducedCost < 0)
-                    potential[e.v] += reducedCost;
+                if (e.cap - e.flow > 0 and dist[e.v] > dist[e.u] + e.cost)
+                    dist[e.v] = dist[e.u] + e.cost;
             }
 
-    return potential;
+    return dist;
 }
 
 pair<vector<int>, vector<Edge*>> dijkstra(graph &adj, vector<int> &potential, int s, int t) {
@@ -103,11 +103,10 @@ pair<vector<int>, vector<Edge*>> dijkstra(graph &adj, vector<int> &potential, in
 }
 
 pii minCostMaxFlow(graph &adj, int flowLimit) {
+    int s = 0, t = (int)(adj.size() - 1);
     int minCost = 0, maxFlow = 0;
 
-    auto potential = bellmanFord(adj);
-
-    int s = 0, t = (int)(adj.size() - 1);
+    auto potential = bellmanFord(adj, s);
 
     while (true) {
         auto dijkstraResult = dijkstra(adj, potential, s, t);
@@ -119,23 +118,13 @@ pii minCostMaxFlow(graph &adj, int flowLimit) {
 
         for (int u = 0; u < (int)adj.size(); ++u)
             if (dist[u] < dist[t])
-                potential[u] += dist[u] - dist[t];
+                potential[u] += dist[u];
 
-        int limit = +oo, v = t;
+        int limit = +oo, v = t, cost = 0;
         while (v != s) {
             auto e = pi[v];
             limit = min(limit, e->cap - e->flow);
             v = e->u;
-        }
-
-        bool maxLimitReached = maxFlow + limit >= flowLimit;
-        limit = maxLimitReached ? flowLimit - maxFlow : limit;
-
-        if (maxLimitReached) {
-            minCost += limit * (potential[t] - potential[s]);
-            maxFlow += limit;
-
-            return { minCost, maxFlow };
         }
 
         v = t;
@@ -143,10 +132,18 @@ pii minCostMaxFlow(graph &adj, int flowLimit) {
             auto e = pi[v];
             e->flow += limit;
             adj[v][e->rev].flow -= limit;
+            cost += e->cost;
             v = e->u;
         }
 
-        minCost += limit * (potential[t] - potential[s]);
+        if (maxFlow + limit >= flowLimit) {
+            minCost += limit * cost;
+            maxFlow += flowLimit - maxFlow;
+
+            return { minCost, maxFlow };
+        }
+
+        minCost += limit * cost;
         maxFlow += limit;
     }
 
