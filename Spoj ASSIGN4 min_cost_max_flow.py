@@ -1,6 +1,8 @@
 import sys
 from heapq import heappop, heappush
 
+oo = 2 ** 63
+
 class Edge:
     def __init__(self, u, v, cap, cost, rev):
         self.u = u
@@ -38,7 +40,7 @@ def read_input():
     return adj, 0, len(adj) - 1
 
 def bellman_ford(adj, s):
-    dist = [float('inf')] * len(adj)
+    dist = [oo] * len(adj)
     dist[s] = 0
 
     for _ in range(len(adj)):
@@ -50,7 +52,6 @@ def bellman_ford(adj, s):
     return dist
 
 def dijkstra(adj, potential, s, t):
-    oo = float('inf')
     dist, pi = [+oo] * len(adj), [None] * len(adj)
 
     dist[s] = 0
@@ -71,9 +72,8 @@ def dijkstra(adj, potential, s, t):
     
     return dist, pi
 
-def min_cost_max_flow(adj, s, t, flow_limit = float('inf')):
+def min_cost_max_flow(adj, s, t, flow_limit = oo):
     min_cost, max_flow = 0, 0
-    oo = float('inf')
 
     potential = bellman_ford(adj, s)
 
@@ -84,8 +84,7 @@ def min_cost_max_flow(adj, s, t, flow_limit = float('inf')):
             break
         
         for v in range(len(adj)):
-            if dist[v] < dist[t]:
-                potential[v] += dist[v]
+            potential[v] += dist[v]
 
         limit, v = +oo, t
         while v:
