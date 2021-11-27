@@ -1,6 +1,8 @@
 import sys
 from heapq import heappop, heappush
     
+oo = 2 ** 63
+    
 class Edge:
     def __init__(self, u, v, cap, cost, rev):
         self.u = u
@@ -16,7 +18,7 @@ def add_edge(adj, u, v, capv, costv):
     
     
 def bellman_ford(adj, s):
-    dist = [float('inf')] * len(adj)
+    dist = [oo] * len(adj)
     dist[s] = 0
     
     for _ in range(len(adj)):
@@ -28,7 +30,6 @@ def bellman_ford(adj, s):
     return dist
     
 def dijkstra(adj, potential, s, t):
-    oo = float('inf')
     dist, pi = [+oo] * len(adj), [None] * len(adj)
     
     dist[s] = 0
@@ -49,9 +50,8 @@ def dijkstra(adj, potential, s, t):
     
     return dist, pi
     
-def min_cost_max_flow(adj, s, t, flow_limit = float('inf')):
+def min_cost_max_flow(adj, s, t, flow_limit = oo):
     min_cost, max_flow = 0, 0
-    oo = float('inf')
     
     potential = bellman_ford(adj, s)
     
@@ -62,8 +62,7 @@ def min_cost_max_flow(adj, s, t, flow_limit = float('inf')):
             break
     
         for v in range(len(adj)):
-            if dist[v] <= dist[t]:
-                potential[v] += dist[v]
+            potential[v] += dist[v]
                     
         limit, v = +oo, t
         while v:
@@ -107,8 +106,8 @@ def read_input():
     e = int(sys.stdin.readline())
     for _ in range(e):
         xi, yi = map(int, sys.stdin.readline().split())
-        add_edge(adj, xi, yi, float('inf'), 1)
-        add_edge(adj, yi, xi, float('inf'), 1)
+        add_edge(adj, xi, yi, oo, 1)
+        add_edge(adj, yi, xi, oo, 1)
     
     for v in range(1, N + 1):
         add_edge(adj, v, t, 1, 0)
